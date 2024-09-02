@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stock_change_percent" translatable="false">%1$+.2f%%</string>
+    <string name="ticker_subtitle_separator" translatable="false">" | "</string>
+    <string name="percent_subtitle" translatable="false">%1$.3f ( %2$+.3f )</string>
+</resources>
