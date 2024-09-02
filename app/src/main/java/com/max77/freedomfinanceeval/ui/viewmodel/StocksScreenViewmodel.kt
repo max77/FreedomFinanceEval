@@ -1,5 +1,6 @@
 package com.max77.freedomfinanceeval.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.max77.freedomfinanceeval.repository.prices.StockPricesRepository
@@ -24,24 +25,23 @@ class StocksScreenViewmodel(
     private val _uiState = MutableStateFlow<UiState<List<StockListItemInfo>>>(UiState.Loading())
     val uiState = _uiState.asStateFlow()
     private var updatesJob: Job? = null
-
     private val currentStockInfos = sortedMapOf<String, StockListItemInfo>().toMutableMap()
 
-    init {
-        startUpdates()
-    }
+//    init {
+//        startUpdates()
+//    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun startUpdates(reloadStockList: Boolean = false) {
+    fun startUpdates(reloadStockList: Boolean = false) {
         updatesJob = viewModelScope.launch(Dispatchers.IO) {
-            _uiState.emit(UiState.Loading())
-
             val stockNames = when (val v = _uiState.value) {
                 is UiState.Data -> v.data.map { it.tickerName }
                 else -> null
             }.orEmpty()
 
             if (stockNames.isEmpty() || reloadStockList) {
+                _uiState.emit(UiState.Loading())
+
                 currentStockInfos.clear()
                 stockNamesRepository.stockNamesFlow
             } else {
@@ -49,14 +49,18 @@ class StocksScreenViewmodel(
             }
                 .flatMapLatest { pricesRepository.getStockPricesFlow(it) }
                 .filter { !it.ticker.isNullOrBlank() }
-                .catch { _uiState.emit(UiState.Error(it.message ?: "General Error")) }
+                .catch {
+                    _uiState.emit(UiState.Error(it.message ?: "General WTF Error"))
+                    Log.e(LOG_TAG, "Error: ${it.message}")
+                }
                 .collect { priceInfo ->
                     val prevListItem = currentStockInfos[priceInfo.ticker]
                     var emitFlag = false
 
                     if (prevListItem == null) {
                         if (isPriceInfoComplete(priceInfo)) {
-                            currentStockInfos[priceInfo.ticker] = priceInfo.toStockListItemInfo()
+                            currentStockInfos[priceInfo.ticker] =
+                                priceInfo.toStockListItemInfo()
                             emitFlag = true
                         }
                     } else {
@@ -80,7 +84,7 @@ class StocksScreenViewmodel(
                 && priceInfo.priceChangePercent != null
                 && !priceInfo.stockName.isNullOrBlank()
 
-    private fun stopUpdates() {
+    fun stopUpdates() {
         updatesJob?.cancel()
         updatesJob = null
     }
@@ -90,4 +94,7 @@ class StocksScreenViewmodel(
         super.onCleared()
     }
 
+    private companion object {
+        val LOG_TAG: String = StocksScreenViewmodel::class.java.name
+    }
 }

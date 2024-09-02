@@ -23,17 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.max77.freedomfinanceeval.repository.di.repoModule
-import com.max77.freedomfinanceeval.ui.di.uiModule
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.max77.freedomfinanceeval.ui.theme.StocksTheme
 import com.max77.freedomfinanceeval.ui.viewmodel.StockListItemInfo
-import com.max77.freedomfinanceeval.ui.viewmodel.StockPriceChangeDirection
 import com.max77.freedomfinanceeval.ui.viewmodel.StocksScreenViewmodel
 import com.max77.freedomfinanceeval.ui.viewmodel.UiState
 import com.max77.freedomfinanceeval.ui.widgets.StockListItem
-import org.koin.android.ext.koin.androidLogger
 import org.koin.androidx.compose.koinViewModel
-import org.koin.compose.KoinApplication
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,21 +37,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             StocksTheme {
-                FreedomApp()
+                StockPricesScreen()
             }
         }
-    }
-}
-
-@Composable
-fun FreedomApp() {
-    KoinApplication(
-        application = {
-            androidLogger()
-            modules(repoModule, uiModule)
-        }
-    ) {
-        StockPricesScreen()
     }
 }
 
@@ -73,6 +57,14 @@ fun StockPricesScreen(viewmodel: StocksScreenViewmodel = koinViewModel()) {
             }
         }
     }
+
+    LifecycleStartEffect("start") {
+        viewmodel.startUpdates()
+
+        onStopOrDispose {
+            viewmodel.stopUpdates()
+        }
+    }
 }
 
 @Composable
@@ -80,14 +72,7 @@ fun StockPriceList(stocks: List<StockListItemInfo>) {
     LazyColumn {
         itemsIndexed(stocks) { idx, item ->
             StockListItem(
-                item.tickerName,
-                item.exchangeName,
-                item.stockName,
-                item.tickerIconUrl,
-                item.priceChangePercent ?: 0.0,
-                item.stockPriceChangeDirection ?: StockPriceChangeDirection.Zero,
-                item.lastTradePrice ?: 0.0,
-                item.priceChangePoints ?: 0.0,
+                item,
                 modifier = Modifier.fillMaxWidth()
             )
             if (idx < stocks.lastIndex)

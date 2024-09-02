@@ -13,6 +13,7 @@ data class StockListItemInfo(
     val priceChangePoints: Double? = null,
     val stockPriceChangeDirection: StockPriceChangeDirection? = null,
     val tickerIconUrl: String? = null,
+    val numDigits: Int = 0,
 )
 
 fun StockListItemInfo.updateFrom(other: StockListItemInfo) =
@@ -35,7 +36,7 @@ fun StockListItemInfo.updateFrom(other: StockListItemInfo) =
                     StockPriceChangeDirection.Zero
                 }
             },
-            tickerIconUrl = other.tickerIconUrl ?: tickerIconUrl
+            tickerIconUrl = other.tickerIconUrl ?: tickerIconUrl,
         )
     } else {
         null

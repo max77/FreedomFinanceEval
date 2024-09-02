@@ -1,5 +1,6 @@
 package com.max77.freedomfinanceeval.ui.widgets
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -14,24 +15,20 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.max77.freedomfinanceeval.R
 import com.max77.freedomfinanceeval.ui.theme.StocksTheme
+import com.max77.freedomfinanceeval.ui.viewmodel.StockListItemInfo
 import com.max77.freedomfinanceeval.ui.viewmodel.StockPriceChangeDirection
 
 @Composable
 internal fun StockListItem(
-    tickerName: String,
-    exchangeName: String?,
-    stockName: String?,
-    tickerIconUrl: String?,
-    stockPriceChangePercent: Double,
-    stockPriceChangeDirection: StockPriceChangeDirection,
-    lastBidPrice: Double,
-    lastBidDelta: Double,
+    info: StockListItemInfo,
     modifier: Modifier = Modifier,
 ) {
-    ConstraintLayout(modifier = modifier
-        .height(50.dp)
-        .padding(4.dp)) {
-        val (ticker, tickerSub, stockChange, stockSub, arrow) = createRefs()
+    ConstraintLayout(
+        modifier = modifier
+            .height(50.dp)
+            .padding(4.dp)
+    ) {
+        val (ticker, tickerSub, percent, stockChange, arrow) = createRefs()
 
         Icon(
             painter = painterResource(R.drawable.arrow_right),
@@ -45,42 +42,43 @@ internal fun StockListItem(
         )
 
         TickerLabel(
-            name = tickerName,
-            iconUrl = tickerIconUrl,
+            name = info.tickerName,
+            iconUrl = info.tickerIconUrl,
             modifier = Modifier
                 .constrainAs(ticker) {
                     start.linkTo(parent.start)
                     top.linkTo(parent.top)
-                    end.linkTo(stockChange.start, margin = 8.dp)
+                    end.linkTo(percent.start, margin = 8.dp)
                     width = Dimension.fillToConstraints
                 }
         )
 
         StockPercentageChangeIndicator(
-            price = stockPriceChangePercent,
-            priceChangeDirection = stockPriceChangeDirection,
-            modifier = Modifier.constrainAs(stockChange) {
+            price = info.priceChangePercent ?: 0.0,
+            priceChangeDirection = info.stockPriceChangeDirection ?: StockPriceChangeDirection.Zero,
+            modifier = Modifier.constrainAs(percent) {
                 end.linkTo(arrow.start, margin = 8.dp)
                 top.linkTo(parent.top)
             }
         )
 
         TickerSubtitle(
-            exchangeName = exchangeName,
-            stockName = stockName,
+            exchangeName = info.exchangeName,
+            stockName = info.stockName,
             modifier = Modifier.constrainAs(tickerSub) {
                 start.linkTo(parent.start, margin = 4.dp)
-                end.linkTo(stockSub.start, margin = 8.dp)
+                end.linkTo(stockChange.start, margin = 8.dp)
                 bottom.linkTo(parent.bottom)
                 width = Dimension.fillToConstraints
             }
         )
 
         StockPercentageSubtitle(
-            price = lastBidPrice,
-            delta = lastBidDelta,
-            modifier = Modifier.constrainAs(stockSub) {
-                end.linkTo(stockChange.end)
+            price = info.lastTradePrice ?: 0.0,
+            delta = info.priceChangePoints ?: 0.0,
+            numDigits = info.numDigits,
+            modifier = Modifier.constrainAs(stockChange) {
+                end.linkTo(percent.end)
                 bottom.linkTo(parent.bottom)
             }
         )
@@ -91,19 +89,12 @@ internal fun StockListItem(
 @Composable
 fun PreviewStockListItem() {
     StocksTheme {
-        Surface() {
+        Surface {
             StockListItem(
-                tickerName = "GAZP",
-                exchangeName = "MCX",
-                stockName = "Газпром",
-                tickerIconUrl = "https://tradernet.com/logos/get-logo-by-ticker?ticker=gazp",
-                stockPriceChangePercent = 3.18,
-                stockPriceChangeDirection = StockPriceChangeDirection.Up,
-                lastBidPrice = 11.234,
-                lastBidDelta = 1.334,
+                StockListItemInfo("GAZP", exchangeName = "XXX", stockName = "BlaBla"),
                 modifier = Modifier
                     .height(50.dp)
-                    .width(240.dp)
+                    .fillMaxWidth()
             )
         }
     }
