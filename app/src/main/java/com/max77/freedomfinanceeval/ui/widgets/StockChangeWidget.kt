@@ -18,7 +18,7 @@ internal fun StockPercentageSubtitle(
 
     Text(
         text = String.format(format, price, delta),
-        style = StocksTheme.typography.tickerSubtitleStyle,
+        style = StocksTheme.typography.percentSubtitleStyle,
         color = StocksTheme.colors.primary,
         maxLines = 1,
         modifier = modifier,
