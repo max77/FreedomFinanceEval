@@ -3,90 +3,54 @@ package com.max77.freedomfinanceeval.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.max77.freedomfinanceeval.repository.prices.StockPricesRepository
-import com.max77.freedomfinanceeval.repository.prices.network.dto.StockPriceInfo
-import com.max77.freedomfinanceeval.repository.stocks.StockNamesRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import com.max77.freedomfinanceeval.repository.StockPricesRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 class StocksScreenViewmodel(
-    private val stockNamesRepository: StockNamesRepository,
-    private val pricesRepository: StockPricesRepository,
+    private val stockPricesRepository: StockPricesRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<List<StockListItemInfo>>>(UiState.Loading())
     val uiState = _uiState.asStateFlow()
     private var updatesJob: Job? = null
-    private val currentStockInfos = sortedMapOf<String, StockListItemInfo>().toMutableMap()
 
-//    init {
-//        startUpdates()
-//    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun startUpdates(reloadStockList: Boolean = false) {
-        updatesJob = viewModelScope.launch(Dispatchers.IO) {
-            val stockNames = when (val v = _uiState.value) {
-                is UiState.Data -> v.data.map { it.tickerName }
-                else -> null
-            }.orEmpty()
-
-            if (stockNames.isEmpty() || reloadStockList) {
-                _uiState.emit(UiState.Loading())
-
-                currentStockInfos.clear()
-                stockNamesRepository.stockNamesFlow
-            } else {
-                listOf(stockNames).asFlow()
-            }
-                .flatMapLatest { pricesRepository.getStockPricesFlow(it) }
-                .filter { !it.ticker.isNullOrBlank() }
-                .catch {
-                    _uiState.emit(UiState.Error(it.message ?: "General WTF Error"))
-                    Log.e(LOG_TAG, "Error: ${it.message}")
-                }
-                .collect { priceInfo ->
-                    val prevListItem = currentStockInfos[priceInfo.ticker]
-                    var emitFlag = false
-
-                    if (prevListItem == null) {
-                        if (isPriceInfoComplete(priceInfo)) {
-                            currentStockInfos[priceInfo.ticker] =
-                                priceInfo.toStockListItemInfo()
-                            emitFlag = true
-                        }
-                    } else {
-                        currentStockInfos[priceInfo.ticker] =
-                            prevListItem.updateFrom(priceInfo.toStockListItemInfo())
-                        emitFlag = true
-                    }
-
-                    if (emitFlag) {
+    fun startUpdates() {
+        updatesJob = viewModelScope.launch {
+            launch {
+                stockPricesRepository.stockPriceInfoFlow
+                    .collect { priceInfo ->
                         _uiState.emit(
-                            UiState.Data(currentStockInfos.values.toList())
+                            UiState.Data(
+                                priceInfo
+                                    .map { StockListItemInfo.fromStockPriceInfo(it) }
+                                    .sortedBy { it.tickerName }
+                            )
                         )
                     }
-                }
+            }
+
+            launch {
+                stockPricesRepository.errorFlow
+                    .collect {
+                        _uiState.emit(UiState.Error(it.message ?: "General WTF Error"))
+                        Log.e(LOG_TAG, "Error: ${it.message}")
+                    }
+            }
         }
     }
-
-    private fun isPriceInfoComplete(priceInfo: StockPriceInfo) =
-        !priceInfo.ticker.isNullOrBlank()
-                && !priceInfo.exchangeName.isNullOrBlank()
-                && priceInfo.priceChangePercent != null
-                && !priceInfo.stockName.isNullOrBlank()
 
     fun stopUpdates() {
         updatesJob?.cancel()
         updatesJob = null
+    }
+
+    fun resetStocks() {
+        viewModelScope.launch {
+            stockPricesRepository.reloadStockNames()
+        }
     }
 
     override fun onCleared() {

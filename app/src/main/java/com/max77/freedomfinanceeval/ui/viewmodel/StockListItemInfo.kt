@@ -1,5 +1,8 @@
 package com.max77.freedomfinanceeval.ui.viewmodel
 
+import com.max77.freedomfinanceeval.repository.dto.StockPriceInfo
+import kotlin.math.round
+
 enum class StockPriceChangeDirection {
     Up, Down, Zero
 }
@@ -14,31 +17,29 @@ data class StockListItemInfo(
     val stockPriceChangeDirection: StockPriceChangeDirection? = null,
     val tickerIconUrl: String? = null,
     val numDigits: Int = 0,
-)
+) {
+    companion object {
+        fun fromStockPriceInfo(stockPriceInfo: StockPriceInfo) =
+            StockListItemInfo(
+                tickerName = stockPriceInfo.ticker ?: "",
+                priceChangePercent = stockPriceInfo.priceChangePercent,
+                exchangeName = stockPriceInfo.exchangeName,
+                stockName = stockPriceInfo.stockName,
+                lastTradePrice = stockPriceInfo.lastTradePrice?.roundTo(
+                    stockPriceInfo.minStep ?: 0.0
+                ),
+                stockPriceChangeDirection = when {
+                    (stockPriceInfo.lastPriceChange ?: 0.0) > 0 -> StockPriceChangeDirection.Up
+                    (stockPriceInfo.lastPriceChange ?: 0.0) < 0 -> StockPriceChangeDirection.Down
+                    else -> StockPriceChangeDirection.Zero
+                },
+                priceChangePoints = stockPriceInfo.priceChangePoints?.roundTo(
+                    stockPriceInfo.minStep ?: 0.0
+                ),
+                tickerIconUrl = stockPriceInfo.ticker?.let { "https://tradernet.com/logos/get-logo-by-ticker?ticker=${it.lowercase()}" },
+                numDigits = stockPriceInfo.minStep?.toBigDecimal()?.scale() ?: 0
+            )
 
-fun StockListItemInfo.updateFrom(other: StockListItemInfo) =
-    if (other.tickerName == tickerName) {
-        copy(
-            priceChangePercent = other.priceChangePercent ?: priceChangePercent,
-            exchangeName = other.exchangeName ?: exchangeName,
-            stockName = other.stockName ?: stockName,
-            lastTradePrice = other.lastTradePrice ?: lastTradePrice,
-            priceChangePoints = other.priceChangePoints ?: priceChangePoints,
-            stockPriceChangeDirection = if (other.priceChangePercent == null) {
-                stockPriceChangeDirection ?: StockPriceChangeDirection.Zero
-            } else {
-                val dp = other.priceChangePercent - (priceChangePercent ?: 0.0)
-                if (dp > 0) {
-                    StockPriceChangeDirection.Up
-                } else if (dp < 0) {
-                    StockPriceChangeDirection.Down
-                } else {
-                    StockPriceChangeDirection.Zero
-                }
-            },
-            tickerIconUrl = other.tickerIconUrl ?: tickerIconUrl,
-        )
-    } else {
-        null
+        private fun Double.roundTo(x: Double) = if (x > 0) round(this / x) * x else this
     }
-
+}

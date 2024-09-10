@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -36,6 +37,11 @@ data class StocksTypography(
     val percentStyle: TextStyle,
 )
 
+@Immutable
+data class StocksSizes(
+    val tickerIconSize: Dp
+)
+
 val LocalStocksColors = staticCompositionLocalOf {
     StocksColors(
         percentUpColor = Color.Unspecified,
@@ -58,6 +64,12 @@ val LocalStocksTypography = staticCompositionLocalOf {
         tickerSubtitleStyle = TextStyle.Default,
         percentSubtitleStyle = TextStyle.Default,
         percentStyle = TextStyle.Default,
+    )
+}
+
+val LocalStocksSizes = staticCompositionLocalOf {
+    StocksSizes(
+        tickerIconSize = 0.dp
     )
 }
 
@@ -91,10 +103,15 @@ fun StocksTheme(
         ),
     )
 
+    val stockSizes = StocksSizes(
+        tickerIconSize = 48.dp
+    )
+
     CompositionLocalProvider(
         LocalStocksColors provides stocksColors,
         LocalStocksShapes provides stocksShapes,
         LocalStocksTypography provides stockTypography,
+        LocalStocksSizes provides stockSizes
     ) {
         MaterialTheme(
             content = content
@@ -114,4 +131,8 @@ object StocksTheme {
     val typography
         @Composable
         get() = LocalStocksTypography.current
+
+    val sizes
+        @Composable
+        get() = LocalStocksSizes.current
 }

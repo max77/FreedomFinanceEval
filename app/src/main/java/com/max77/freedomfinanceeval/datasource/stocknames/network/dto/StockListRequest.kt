@@ -1,4 +1,4 @@
-package com.max77.freedomfinanceeval.repository.stocks.network.dto
+package com.max77.freedomfinanceeval.datasource.stocknames.network.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

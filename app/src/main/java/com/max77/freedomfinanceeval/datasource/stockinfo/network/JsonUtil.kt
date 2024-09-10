@@ -1,4 +1,4 @@
-package com.max77.freedomfinanceeval.repository.prices.network
+package com.max77.freedomfinanceeval.datasource.stockinfo.network
 
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive

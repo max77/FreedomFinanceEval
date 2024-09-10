@@ -11,13 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
-import coil.size.Size
 import com.max77.freedomfinanceeval.ui.theme.StocksTheme
 
 @Composable
@@ -34,7 +34,7 @@ internal fun TickerLabel(
         val painter = rememberAsyncImagePainter(
             model = ImageRequest.Builder(LocalContext.current)
                 .data(iconUrl)
-                .size(Size.ORIGINAL)
+                .size(LocalDensity.current.run { 24.dp.roundToPx() })
                 .build()
         )
 
@@ -47,7 +47,7 @@ internal fun TickerLabel(
                 modifier = Modifier.size(24.dp)
             )
         } else {
-            Spacer(modifier = Modifier.size(4.dp))
+            Spacer(modifier = Modifier.size(width = 4.dp, height = 24.dp))
         }
 
         Text(

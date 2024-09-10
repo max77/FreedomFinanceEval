@@ -1,7 +1,7 @@
-package com.max77.freedomfinanceeval.repository.prices.network.dto
+package com.max77.freedomfinanceeval.datasource.stockinfo.network.dto
 
 
-import com.max77.freedomfinanceeval.repository.prices.network.equalsToString
+import com.max77.freedomfinanceeval.datasource.stockinfo.network.equalsToString
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -24,7 +24,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
  */
 
 @Serializable
-data class StockPriceInfo(
+data class StockInfo(
     @SerialName("c")
     val ticker: String? = null,
     @SerialName("pcp")
@@ -45,10 +45,10 @@ data class StockPriceInfo(
     val priceChangeDirection: String? = null
 ) {
     companion object {
-        fun fromString(json: Json, s: String): StockPriceInfo =
+        fun fromString(json: Json, s: String): StockInfo =
             json.decodeFromString<JsonArray>(s).let { rootJson ->
                 if (rootJson[0].equalsToString("q")) {
-                    json.decodeFromJsonElement<StockPriceInfo>(rootJson[1])
+                    json.decodeFromJsonElement<StockInfo>(rootJson[1])
                 } else {
                     throw IllegalArgumentException("Incorrect Stock Info Format")
                 }

@@ -1,9 +1,9 @@
-package com.max77.freedomfinanceeval.repository.stocks
+package com.max77.freedomfinanceeval.datasource.stocknames
 
 import kotlinx.coroutines.flow.Flow
 
 typealias StockName = String
 
-interface StockNamesRepository {
+interface StockNamesDataSource {
     val stockNamesFlow: Flow<List<StockName>>
 }

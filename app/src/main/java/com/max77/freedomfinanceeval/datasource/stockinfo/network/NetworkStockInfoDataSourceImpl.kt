@@ -1,9 +1,9 @@
-package com.max77.freedomfinanceeval.repository.prices.network
+package com.max77.freedomfinanceeval.datasource.stockinfo.network
 
 import android.util.Log
-import com.max77.freedomfinanceeval.repository.prices.StockPricesRepository
-import com.max77.freedomfinanceeval.repository.prices.network.dto.StockPriceInfo
-import com.max77.freedomfinanceeval.repository.stocks.StockName
+import com.max77.freedomfinanceeval.datasource.stocknames.StockName
+import com.max77.freedomfinanceeval.datasource.stockinfo.StockInfoDataSource
+import com.max77.freedomfinanceeval.datasource.stockinfo.network.dto.StockInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.ws
@@ -16,15 +16,17 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 
-class NetworkStockPricesRepositoryImpl(
+class NetworkStockInfoDataSourceImpl(
     private val ktorClient: HttpClient,
     private val json: Json,
-) : StockPricesRepository {
+) : StockInfoDataSource {
     override fun getStockPricesFlow(stockList: List<StockName>) = flow {
         ktorClient.ws(
             urlString = WS_ENDPOINT,
             request = { parameter("SID", SID) }
         ) {
+            Log.i(LOG_TAG, "Stock prices flow started")
+
             sendSerialized(makeStockPricesRequest(stockList))
             incoming
                 .consumeAsFlow()
@@ -32,7 +34,7 @@ class NetworkStockPricesRepositoryImpl(
                     try {
                         (frame as? Frame.Text)?.readText()?.let {
                             Log.i(LOG_TAG, it)
-                            emit(StockPriceInfo.fromString(json, it))
+                            emit(StockInfo.fromString(json, it))
                         }
                     } catch (e: Exception) {
                         Log.e(LOG_TAG, "$e")
@@ -50,7 +52,7 @@ class NetworkStockPricesRepositoryImpl(
         )
 
     private companion object {
-        val LOG_TAG: String = NetworkStockPricesRepositoryImpl::class.java.name
+        val LOG_TAG: String = NetworkStockInfoDataSourceImpl::class.java.name
         const val SID = "03141a009b4f3a9d0f40969cf22d17cf"
         const val WS_ENDPOINT = "wss://wss.tradernet.com"
     }

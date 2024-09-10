@@ -1,10 +1,10 @@
-package com.max77.freedomfinanceeval.repository.stocks.network
+package com.max77.freedomfinanceeval.datasource.stocknames.network
 
-import com.max77.freedomfinanceeval.repository.stocks.StockName
-import com.max77.freedomfinanceeval.repository.stocks.StockNamesRepository
-import com.max77.freedomfinanceeval.repository.stocks.network.ApiUtils.deserializeFromString
-import com.max77.freedomfinanceeval.repository.stocks.network.dto.StockListRequest
-import com.max77.freedomfinanceeval.repository.stocks.network.dto.StockListResponse
+import com.max77.freedomfinanceeval.datasource.stocknames.StockName
+import com.max77.freedomfinanceeval.datasource.stocknames.StockNamesDataSource
+import com.max77.freedomfinanceeval.datasource.stocknames.network.ApiUtils.deserializeFromString
+import com.max77.freedomfinanceeval.datasource.stocknames.network.dto.StockListRequest
+import com.max77.freedomfinanceeval.datasource.stocknames.network.dto.StockListResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.parameter
@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class NetworkStockNamesRepositoryImpl(
+class NetworkStockNamesDataSourceImpl(
     private val ktorClient: HttpClient,
     private val json: Json
-) : StockNamesRepository {
+) : StockNamesDataSource {
 
     override val stockNamesFlow: Flow<List<StockName>> = flow {
         val body = StockListRequest(
@@ -34,7 +34,7 @@ class NetworkStockNamesRepositoryImpl(
         ).let { json.encodeToString(it) }
 
         // todo: вынести в сетевой слой
-        val response = ktorClient.get(ApiUrl) {
+        val response = ktorClient.get(API_URL) {
             contentType(ContentType.Application.Json)
             parameter("q", body)
         }
@@ -47,6 +47,6 @@ class NetworkStockNamesRepositoryImpl(
     }
 
     private companion object {
-        const val ApiUrl = "https://tradernet.com/api/"
+        const val API_URL = "https://tradernet.com/api/"
     }
 }

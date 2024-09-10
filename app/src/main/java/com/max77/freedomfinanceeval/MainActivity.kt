@@ -70,7 +70,10 @@ fun StockPricesScreen(viewmodel: StocksScreenViewmodel = koinViewModel()) {
 @Composable
 fun StockPriceList(stocks: List<StockListItemInfo>) {
     LazyColumn {
-        itemsIndexed(stocks) { idx, item ->
+        itemsIndexed(
+            items = stocks,
+            key = { _, item -> item.tickerName }
+        ) { idx, item ->
             StockListItem(
                 item,
                 modifier = Modifier.fillMaxWidth()
